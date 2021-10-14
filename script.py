@@ -3,12 +3,9 @@ from oauth2client.service_account import ServiceAccountCredentials
 from datetime import datetime, time
 from concurrent.futures import ThreadPoolExecutor
 
+import configparser
 import requests
 import json
-
-SECRET_JSON_FILE_PATH=''
-VAUHTIJUOKSU_API_URL=''
-GAMEDATA_SHEET_NAME=''
 
 class Gsheets:
     def __init__(self, secret_path):
@@ -28,32 +25,45 @@ class Gsheets:
         return result
 
 class VauhtijuoksuApi:
-    def __init__(self, url):
+    def __init__(self, url, basic_auth_user, basic_auth_pw):
         self.url = url
+        self.user = basic_auth_user
+        self.pw = basic_auth_pw
 
     def getGamedataAll(self):
         r = requests.get(f'{self.url}/gamedata')
         return json.loads(r.content)
 
     def deleteGamedata(self, id):
-        r = requests.delete(f'{self.url}/gamedata/{id}')
-        return r.status_code
+        r = requests.delete(f'{self.url}/gamedata/{id}', auth=(self.user, self.pw))
+        if r.status_code == 204:
+            return r.status_code
+        else:
+            print(r.status_code)
 
     def postGamedata(self, value):
-        r = requests.post(f'{self.url}/gamedata/', json=value)
-        if r.status_code == 200:
+        r = requests.post(f'{self.url}/gamedata/', json=value, auth=(self.user, self.pw))
+        if r.status_code == 201:
             return json.loads(r.content)
         else:
-            print(r)
+            print(r.status_code)
 
 
        
 if __name__ == "__main__":
-    gsheets = Gsheets(SECRET_JSON_FILE_PATH)
-    gamedataSheet = gsheets.fetchfromsheets(GAMEDATA_SHEET_NAME)
+    configReader = configparser.ConfigParser()
+    configReader.read('config.ini')
+
+    config = configReader['DEFAULT']
+    if not config:
+        print('Please give config')
+        quit()
+
+    gsheets = Gsheets(config['SECRET_JSON_FILE_PATH'])
+    gamedataSheet = gsheets.fetchfromsheets(config['GAMEDATA_SHEET_NAME'])
     print('Sheet fetched')
 
-    vjapi = VauhtijuoksuApi(VAUHTIJUOKSU_API_URL)
+    vjapi = VauhtijuoksuApi(config['VAUHTIJUOKSU_API_URL'], config['BASIC_AUTH_USER'], config['BASIC_AUTH_PW'])
     gamedataAll = vjapi.getGamedataAll()
     print('Games from vauhtijuoksu-api fetched')
 
