@@ -1,11 +1,12 @@
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
-from datetime import datetime, time
+from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
 
 import configparser
 import requests
 import json
+import pytz
 
 class Gsheets:
     def __init__(self, secret_path):
@@ -80,8 +81,8 @@ if __name__ == "__main__":
     # add new games
     new_games = []
     for gamedata in gamedataSheet:
-        gamedata['start_time'] = datetime.strptime(gamedata['start_time'], '%d/%m/%Y %H:%M:%S').isoformat()
-        gamedata['end_time'] = datetime.strptime(gamedata['end_time'], '%d/%m/%Y %H:%M:%S').isoformat()
+        gamedata['start_time'] = pytz.timezone('Europe/Helsinki').localize(datetime.strptime(gamedata['start_time'], '%d/%m/%Y %H:%M:%S')).isoformat()
+        gamedata['end_time'] = pytz.timezone('Europe/Helsinki').localize(datetime.strptime(gamedata['end_time'], '%d/%m/%Y %H:%M:%S')).isoformat()
         new_games.append(gamedata)
 
     with ThreadPoolExecutor(max_workers=50) as pool:
