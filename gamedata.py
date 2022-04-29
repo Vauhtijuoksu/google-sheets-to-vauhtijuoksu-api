@@ -45,3 +45,6 @@ if __name__ == "__main__":
         pool.map(vjapi.postGamedata, new_games)
     print(f'{len(new_games)} new games added')
 
+    gamedata = vjapi.getGamedataAll()
+    vjapi.patchStreamMetadata({'current_game_id': gamedata[0]['id']})
+

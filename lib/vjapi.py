@@ -17,6 +17,7 @@ class VauhtijuoksuApi:
             return r.status_code
         else:
             print(r.status_code)
+            print(r.content)
 
     def postGamedata(self, value):
         r = requests.post(f'{self.url}/gamedata/', json=value, auth=(self.user, self.pw))
@@ -24,6 +25,7 @@ class VauhtijuoksuApi:
             return json.loads(r.content)
         else:
             print(r.status_code)
+            print(r.content)
 
     def getIncentivesAll(self):
         r = requests.get(f'{self.url}/incentives')
@@ -35,10 +37,20 @@ class VauhtijuoksuApi:
             return r.status_code
         else:
             print(r.status_code)
+            print(r.content)
 
     def postIncentive(self, value):
         r = requests.post(f'{self.url}/incentives/', json=value, auth=(self.user, self.pw))
         if r.status_code == 201:
             return json.loads(r.content)
         else:
+            print(r.status_code)
+            print(r.content)
+
+    def patchStreamMetadata(self, value):
+        r = requests.patch(f'{self.url}/stream-metadata/', json=value, auth=(self.user, self.pw))
+        if r.status_code == 200:
+            return json.loads(r.content)
+        else:
+            print(r.status_code)
             print(r.content)
