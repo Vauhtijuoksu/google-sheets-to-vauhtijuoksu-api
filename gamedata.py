@@ -17,12 +17,16 @@ if __name__ == "__main__":
         quit()
 
     gsheets = gs.Gsheets(config['SECRET_JSON_FILE_PATH'])
-    gamedataSheet = gsheets.fetchfromsheets(config['SHEET_NAME'])
-    print('Sheet fetched')
+    gamedataSheet = gsheets.fetchfromsheets(config['GAMEDATA_SHEET_NAME'])
+    PlayersSheet = gsheets.fetchfromsheets(config['PLAYERS_SHEET_NAME'])
+    print('Sheets fetched')
 
     vjapi = vj.VauhtijuoksuApi(config['VAUHTIJUOKSU_API_URL'], config['BASIC_AUTH_USER'], config['BASIC_AUTH_PW'])
     gamedataAll = vjapi.getGamedataAll()
     print('Games from vauhtijuoksu-api fetched')
+
+    playersAll = vjapi.getPlayersAll()
+    print('Players from vauhtijuoksu-api fetched')
 
 
     # delete old games
@@ -34,11 +38,41 @@ if __name__ == "__main__":
         pool.map(vjapi.deleteGamedata, ids_old)
     print(f'{len(ids_old)} old games deleted')
 
+    # delete old players
+    ids_old = []
+    for player in playersAll:
+        ids_old.append(player['id'])
+
+    with ThreadPoolExecutor(max_workers=50) as pool:
+        pool.map(vjapi.deletePlayer, ids_old)
+    print(f'{len(ids_old)} old players deleted')
+
+    # add new players
+    new_players = []
+    for player in PlayersSheet:
+        new_players.append({
+            "display_name": player["display_name"],
+            "discord_nick": player["discord_nick"],
+            "twitch_channel": player["twitch_channel"],
+        })
+
+    with ThreadPoolExecutor(max_workers=50) as pool:
+        pool.map(vjapi.postPlayer, new_players)
+    print(f'{len(new_players)} new players added')
+
+    players = vjapi.getPlayersAll()
     # add new games
     new_games = []
     for gamedata in gamedataSheet:
-        gamedata['start_time'] = pytz.timezone('Europe/Helsinki').localize(datetime.strptime(gamedata['start_time'], '%d/%m/%Y %H:%M:%S')).isoformat()
-        gamedata['end_time'] = pytz.timezone('Europe/Helsinki').localize(datetime.strptime(gamedata['end_time'], '%d/%m/%Y %H:%M:%S')).isoformat()
+        gamedata['start_time'] = pytz.timezone('Europe/Helsinki').localize(datetime.strptime(gamedata['start_time'], '%Y-%m-%d %H:%M:%S')).isoformat()
+        gamedata['end_time'] = pytz.timezone('Europe/Helsinki').localize(datetime.strptime(gamedata['end_time'], '%Y-%m-%d %H:%M:%S')).isoformat()
+        players_parsed_from_gamedata = gamedata['players'].split(',')
+        gamedata['players'] = []
+        for player in players_parsed_from_gamedata:
+            player = player.strip()
+            player_id = next(item for item in players if item["display_name"] == player)['id']
+            gamedata['players'].append(player_id)
+
         new_games.append(gamedata)
 
     with ThreadPoolExecutor(max_workers=50) as pool:

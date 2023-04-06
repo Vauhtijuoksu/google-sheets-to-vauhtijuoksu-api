@@ -47,9 +47,39 @@ class VauhtijuoksuApi:
             print(r.status_code)
             print(r.content)
 
+    def patchDonation(self, id, value):
+        r = requests.patch(f'{self.url}/donations/{id}', json=value, auth=(self.user, self.pw))
+        if r.status_code == 200:
+            return json.loads(r.content)
+        else:
+            print(r.status_code)
+            print(r.content)
+
     def patchStreamMetadata(self, value):
         r = requests.patch(f'{self.url}/stream-metadata/', json=value, auth=(self.user, self.pw))
         if r.status_code == 200:
+            return json.loads(r.content)
+        else:
+            print(r.status_code)
+            print(r.content)
+
+    def getPlayersAll(self):
+        r = requests.get(f'{self.url}/players')
+        if r.content == b'':
+            return []
+        return json.loads(r.content)
+
+    def deletePlayer(self, id):
+        r = requests.delete(f'{self.url}/players/{id}', auth=(self.user, self.pw))
+        if r.status_code == 204:
+            return r.status_code
+        else:
+            print(r.status_code)
+            print(r.content)
+
+    def postPlayer(self, value):
+        r = requests.post(f'{self.url}/players/', json=value, auth=(self.user, self.pw))
+        if r.status_code == 201:
             return json.loads(r.content)
         else:
             print(r.status_code)
