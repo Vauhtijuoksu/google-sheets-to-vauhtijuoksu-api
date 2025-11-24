@@ -64,13 +64,13 @@ class VauhtijuoksuApi:
             print(r.content)
 
     def getPlayersAll(self):
-        r = requests.get(f'{self.url}/players')
+        r = requests.get(f'{self.url}/participants')
         if r.content == b'':
             return []
         return json.loads(r.content)
 
     def deletePlayer(self, id):
-        r = requests.delete(f'{self.url}/players/{id}', auth=(self.user, self.pw))
+        r = requests.delete(f'{self.url}/participants/{id}', auth=(self.user, self.pw))
         if r.status_code == 204:
             return r.status_code
         else:
@@ -78,7 +78,7 @@ class VauhtijuoksuApi:
             print(r.content)
 
     def postPlayer(self, value):
-        r = requests.post(f'{self.url}/players/', json=value, auth=(self.user, self.pw))
+        r = requests.post(f'{self.url}/participants/', json=value, auth=(self.user, self.pw))
         if r.status_code == 201:
             return json.loads(r.content)
         else:

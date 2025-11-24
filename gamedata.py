@@ -52,8 +52,16 @@ if __name__ == "__main__":
     for player in PlayersSheet:
         new_players.append({
             "display_name": player["display_name"],
-            "discord_nick": player["discord_nick"],
-            "twitch_channel": player["twitch_channel"],
+            "social_medias": [
+                {
+                    "platform": "TWITCH",
+                    "username": player.get("twitch_channel", "")
+                },
+                {
+                    "platform": "DISCORD",
+                    "username": player.get("discord_nick", "")
+                }
+            ]
         })
 
     with ThreadPoolExecutor(max_workers=50) as pool:
